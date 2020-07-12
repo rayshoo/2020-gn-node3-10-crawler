@@ -3,6 +3,8 @@ const parse = require('csv-parse/lib/sync');
 const cheerio = require('cheerio'); // DOM 핸들링
 const axios = require('axios');
 const puppeteer = require('puppeteer');
+const xlsx = require('xlsx');
+const add_to_sheet = require('./add_to_sheet');
 
 const csv = fs.readFileSync('./data/coupang.csv');
 // console.log(csv.toString('utf-8'));
@@ -33,6 +35,7 @@ const crawler = async () => {
 
 // crawler();
 
+/* puppeteer */
 const crawler2 = async () => {
   /* 브라우저 띄우기 */
   // const browser = await puppeteer.launch({ headless: false });
@@ -55,6 +58,7 @@ const crawler2 = async () => {
 };
 crawler2();
 
+/* puppeteer, crawl */
 const crawler3 = async () => {
   const resultData = [];
   const browser = await puppeteer.launch({ headless: false });
@@ -79,7 +83,51 @@ const crawler3 = async () => {
     }),
   );
   await browser.close();
-  // console.log(resultData);
+  let wrTxt = '';
+  for (let v of resultData) {
+    wrTxt += `${v.linkTitle},${v.link},${v.title},${v.price},${v.img}\n`;
+  }
+  // fs.writeFileSync('./result/coupang-puppeteer.csv', wrTxt);
 };
 
-crawler3();
+// crawler3();
+
+// console.log(excel.SheetNames);
+const excel = xlsx.readFile('./data/coupang.xlsx');
+const sheet = excel.Sheets.Sheet1;
+const sheetData = xlsx.utils.sheet_to_json(sheet);
+console.log(sheetData);
+
+/* xlsx */
+const crawler4 = async () => {
+  const resultData = [];
+  const browser = await puppeteer.launch({ headless: false });
+  const result = await Promise.all(
+    sheetData.map(async (v, i) => {
+      const page = await browser.newPage();
+      await page.goto(v['링크']);
+      const titleEl = await page.$('h2.prod-buy-header__title');
+      const title = await page.evaluate(tag => tag.textContent.trim(), titleEl);
+      const priceEl = await page.$('.total-price strong');
+      const price = await page.evaluate(tag => tag.textContent.trim(), priceEl);
+      const imgEl = await page.$('img.prod-image__detail');
+      const img = await page.evaluate(tag => tag.src, imgEl);
+      resultData[i] = {
+        linkTitle: v['상품'],
+        link: v['링크'],
+        title,
+        price,
+        img,
+      };
+      await page.close();
+    }),
+  );
+  await browser.close();
+  for (let i in resultData) {
+    add_to_sheet(sheet, 'C' + (Number(i) + 2), 'n', resultData[i].title);
+    add_to_sheet(sheet, 'D' + (Number(i) + 2), 'n', resultData[i].price);
+    add_to_sheet(sheet, 'E' + (Number(i) + 2), 'n', resultData[i].img);
+  }
+  xlsx.writeFile(excel, './result/coupang.xlsx');
+};
+crawler4();
