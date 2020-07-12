@@ -1,0 +1,22 @@
+{
+  "name": "10.crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "dfnk5516",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "csv-parse": "^4.10.1",
+    "csv-stringify": "^5.5.0",
+    "fs": "0.0.1-security",
+    "puppeteer": "^5.0.0",
+    "xlsx": "^0.16.3"
+  }
+}
