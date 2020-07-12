@@ -2,6 +2,7 @@ const fs = require('fs');
 const parse = require('csv-parse/lib/sync');
 const cheerio = require('cheerio'); // DOM 핸들링
 const axios = require('axios');
+const puppeteer = require('puppeteer');
 
 const csv = fs.readFileSync('./data/coupang.csv');
 // console.log(csv.toString('utf-8'));
@@ -30,4 +31,55 @@ const crawler = async () => {
   }
 };
 
-crawler();
+// crawler();
+
+const crawler2 = async () => {
+  /* 브라우저 띄우기 */
+  // const browser = await puppeteer.launch({ headless: false });
+  /* 기본값 headless : true > 브라우저 감춤 */
+  const browser = await puppeteer.launch();
+
+  const page = await browser.newPage();
+  await page.goto('https://naver.com');
+  await page.waitFor(2000);
+  const page2 = await browser.newPage();
+  await page2.goto('https://daum.net');
+  await page.waitFor(2000);
+  const page3 = await browser.newPage();
+  await page3.goto('https://google.com');
+  await page.waitFor(2000);
+  await page.close();
+  await page2.close();
+  await page3.close();
+  await browser.close();
+};
+crawler2();
+
+const crawler3 = async () => {
+  const resultData = [];
+  const browser = await puppeteer.launch({ headless: false });
+  const result = await Promise.all(
+    sendData.map(async (v, i) => {
+      const page = await browser.newPage();
+      await page.goto(v[1]);
+      const titleEl = await page.$('h2.prod-buy-header__title');
+      const title = await page.evaluate(tag => tag.textContent.trim(), titleEl);
+      const priceEl = await page.$('.total-price strong');
+      const price = await page.evaluate(tag => tag.textContent.trim(), priceEl);
+      const imgEl = await page.$('img.prod-image__detail');
+      const img = await page.evaluate(tag => tag.src, imgEl);
+      resultData.push({
+        linkTitle: v[0],
+        link: v[1],
+        title,
+        price,
+        img,
+      });
+      await page.close();
+    }),
+  );
+  await browser.close();
+  // console.log(resultData);
+};
+
+crawler3();
