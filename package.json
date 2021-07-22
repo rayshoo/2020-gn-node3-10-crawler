@@ -17,6 +17,6 @@
     "csv-stringify": "^5.5.0",
     "fs": "0.0.1-security",
     "puppeteer": "^5.0.0",
-    "xlsx": "^0.16.3"
+    "xlsx": "^0.17.0"
   }
 }
